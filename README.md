@@ -3,8 +3,7 @@
 
 A dynamic, pure frontend career roadmap platform designed to simplify tech career paths by providing 25+ structured global learning tracks, including **Full-Stack Development (MERN Stack Foundation)**.
 
-### 📸 Project Preview
-![NextGenCareer UI](image_f9fccb.png)
+
 
 * **Interactive Learning:** Step-by-step milestones with localized progress auto-saved in the browser.
 * **Premium Content:** Integrated with real, working resource links for tutorials and documentation.
