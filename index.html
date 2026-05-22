@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen Career | Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="glass-nav">
+            <div class="nav-brand"><i class="fas fa-globe-americas nav-icon"></i><span>NextGen<span class="teal">Career</span></span></div>
+            <div class="nav-links"><a href="index.html" class="nav-link active-link"><i class="fas fa-compass"></i> Dashboard</a><a href="#" id="favoritesIndicator" class="nav-link"><i class="fas fa-check-circle"></i> My Progress</a></div>
+        </nav>
+        <main class="dashboard-main">
+            <section class="hero">
+                <div class="hero-badge">⚡ 25+ Global Career Tracks</div>
+                <h1 class="hero-title">Map your future with <span class="teal-glow">industry roadmaps</span></h1>
+                <p class="hero-desc">Interactive, step‑by‑step career blueprints designed by senior experts. Mark achievements, save progress, and unlock premium resources.</p>
+                <div class="search-wrapper"><i class="fas fa-search search-icon"></i><input type="text" id="trackSearch" class="search-input" placeholder="Search by title, skill, or keyword..."><button id="clearSearchBtn" class="clear-search"><i class="fas fa-times-circle"></i></button></div>
+                <div class="stats-row"><span><i class="fas fa-road"></i> 25 careers</span><span><i class="fas fa-tasks"></i> 120+ milestones</span><span><i class="fas fa-database"></i> local progress saved</span></div>
+            </section>
+            <section class="career-grid-section">
+                <div class="section-header"><h2><i class="fas fa-cubes"></i> All career ecosystems</h2><span id="resultCount" class="result-badge">25 tracks ready</span></div>
+                <div id="careerCardsGrid" class="career-grid"><div class="loader-grid"><i class="fas fa-spinner fa-pulse"></i> Loading roadmaps...</div></div>
+            </section>
+        </main>
+        <footer class="modern-footer"><p>© 2025 NextGen Career — pure frontend roadmap platform. Progress saved in your browser.</p></footer>
+    </div>
+    <script src="data.js"></script>
+    <script>
+        (function(){
+            if(typeof careerTracksData==='undefined'){document.getElementById('careerCardsGrid').innerHTML='<div class="error-msg">⚠️ Data error</div>';return;}
+            const tracks=careerTracksData, grid=document.getElementById('careerCardsGrid'), search=document.getElementById('trackSearch'), clearBtn=document.getElementById('clearSearchBtn'), resultSpan=document.getElementById('resultCount');
+            function escapeHtml(s){if(!s)return '';return s.replace(/[&<>]/g,function(m){if(m==='&')return '&amp;';if(m==='<')return '&lt;';if(m==='>')return '&gt;';return m;});}
+            function renderCards(filtered){
+                if(!Object.keys(filtered).length){grid.innerHTML=`<div class="no-results"><i class="fas fa-map-frown"></i><h3>No matching tracks</h3><p>Try different keywords.</p></div>`;resultSpan.innerText='0 tracks';return;}
+                let html='';
+                for(let [key,track] of Object.entries(filtered)){
+                    let doneCount=0;
+                    try{const stored=localStorage.getItem(`ng_progress_${key}`);if(stored)doneCount=new Set(JSON.parse(stored)).size;}catch(e){}
+                    html+=`<div class="career-card"><div class="card-header-icon"><i class="${track.icon_class||'fas fa-code-branch'}"></i></div><h3 class="card-title">${escapeHtml(track.title)}</h3><p class="card-desc">${escapeHtml(track.desc)}</p><div class="card-meta"><span><i class="fas fa-list-check"></i> ${track.steps.length} milestones</span><span class="progress-chip"><i class="fas fa-check-circle"></i> ${doneCount}/${track.steps.length} done</span></div><button class="card-btn" data-track="${key}">Explore Roadmap <i class="fas fa-arrow-right"></i></button></div>`;
+                }
+                grid.innerHTML=html;
+                resultSpan.innerText=`${Object.keys(filtered).length} tracks`;
+                document.querySelectorAll('.card-btn').forEach(btn=>btn.addEventListener('click',()=>{window.location.href=`roadmap.html?track=${encodeURIComponent(btn.dataset.track)}`;}));
+            }
+            function filterTracks(q){
+                if(!q.trim())return tracks;
+                const lower=q.toLowerCase(), filtered={};
+                for(let [key,track] of Object.entries(tracks)){
+                    let match=track.title.toLowerCase().includes(lower)||track.desc.toLowerCase().includes(lower);
+                    if(!match && track.steps) match=track.steps.some(s=>s.title.toLowerCase().includes(lower)||(s.tags&&s.tags.some(t=>t.toLowerCase().includes(lower))));
+                    if(match) filtered[key]=track;
+                }
+                return filtered;
+            }
+            function update(){renderCards(filterTracks(search.value));clearBtn.style.opacity=search.value?'1':'0.4';}
+            search.addEventListener('input',update);
+            clearBtn.addEventListener('click',()=>{search.value='';update();search.focus();});
+            renderCards(tracks);
+            window.addEventListener('storage',()=>update());
+        })();
+    </script>
+</body>
+</html>
