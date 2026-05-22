@@ -11,4 +11,4 @@ A dynamic, pure frontend career roadmap platform designed to simplify tech caree
 * **Tech Stack:** 🌐 HTML5 | 🎨 CSS3 | 💻 Modern JavaScript (ES6+)
 
 🔗(https://pamodikavindya.github.io/NextGenCareer/
-## 🌐 Featured Project: NextGenCareer
+
