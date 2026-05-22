@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen Career | Interactive Roadmap</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="glass-nav">
+            <div class="nav-brand"><i class="fas fa-globe-americas nav-icon"></i><span>NextGen<span class="teal">Career</span></span></div>
+            <div class="nav-links"><a href="index.html" class="nav-link"><i class="fas fa-compass"></i> Dashboard</a><a href="#" class="nav-link active-link" id="trackNameNav"><i class="fas fa-map"></i> Roadmap</a></div>
+        </nav>
+        <main class="roadmap-main">
+            <div class="roadmap-header">
+                <button id="backBtn" class="back-button"><i class="fas fa-arrow-left"></i> All tracks</button>
+                <div class="track-title-area"><h1 id="roadmapTitle">Loading...</h1><p id="roadmapDesc"></p></div>
+                <div class="progress-stats"><span id="doneCounter">0</span> / <span id="totalSteps">0</span> completed</div>
+            </div>
+            <div id="timelineContainer" class="vertical-timeline"><div class="loader-timeline"><i class="fas fa-spinner fa-pulse"></i> Building roadmap...</div></div>
+        </main>
+        <footer class="modern-footer"><p>✅ Progress auto-saves. Click "Premium Resource" to access real tutorials, docs, and courses.</p></footer>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        (function(){
+            const params = new URLSearchParams(window.location.search);
+            const trackKey = params.get('track');
+            if(!trackKey || !careerTracksData[trackKey]){
+                document.getElementById('timelineContainer').innerHTML = '<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> Track not found. <a href="index.html">Return to dashboard</a></div>';
+                return;
+            }
+            const track = careerTracksData[trackKey];
+            document.getElementById('roadmapTitle').innerText = track.title;
+            document.getElementById('roadmapDesc').innerText = track.desc;
+            document.getElementById('trackNameNav').innerHTML = `<i class="fas fa-map"></i> ${track.title}`;
+            const totalSteps = track.steps.length;
+            document.getElementById('totalSteps').innerText = totalSteps;
+
+            let completedSet = new Set();
+            const storageKey = `ng_progress_${trackKey}`;
+            
+            function loadProgress(){
+                try{
+                    const stored = localStorage.getItem(storageKey);
+                    if(stored) completedSet = new Set(JSON.parse(stored));
+                    else completedSet.clear();
+                }catch(e){ completedSet.clear(); }
+                updateCounter();
+            }
+            function updateCounter(){
+                const done = completedSet.size;
+                document.getElementById('doneCounter').innerText = done;
+                document.querySelectorAll('.step-checkbox').forEach(cb => {
+                    const stepId = cb.getAttribute('data-step-id');
+                    cb.checked = completedSet.has(stepId);
+                });
+            }
+            function saveProgress(){
+                localStorage.setItem(storageKey, JSON.stringify(Array.from(completedSet)));
+                updateCounter();
+            }
+            function toggleStep(stepId, isChecked){
+                if(isChecked) completedSet.add(stepId);
+                else completedSet.delete(stepId);
+                saveProgress();
+            }
+
+            // Render timeline
+            const container = document.getElementById('timelineContainer');
+            let timelineHtml = '<div class="timeline">';
+            track.steps.forEach((step, idx) => {
+                const stepId = step.id;
+                const isDone = completedSet.has(stepId);
+                const tagsHtml = step.tags.map(tag => `<span class="skill-tag">${escapeHtml(tag)}</span>`).join('');
+                timelineHtml += `
+                    <div class="timeline-item ${isDone ? 'completed-step' : ''}" data-step-id="${stepId}">
+                        <div class="timeline-marker"><div class="marker-dot"></div><div class="timeline-line"></div></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <span class="step-num">Step ${step.num}</span>
+                                <span class="step-time"><i class="far fa-clock"></i> ${step.time}</span>
+                                <label class="custom-checkbox">
+                                    <input type="checkbox" class="step-checkbox" data-step-id="${stepId}" ${isDone ? 'checked' : ''}>
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-label">Mark as Done</span>
+                                </label>
+                            </div>
+                            <h3 class="step-title">${escapeHtml(step.title)}</h3>
+                            <p class="step-body">${escapeHtml(step.body)}</p>
+                            <div class="step-tags">${tagsHtml}</div>
+                            <a href="${step.link}" target="_blank" rel="noopener noreferrer" class="premium-btn"><i class="fas fa-gem"></i> View Premium Resource</a>
+                        </div>
+                    </div>
+                `;
+            });
+            timelineHtml += '</div>';
+            container.innerHTML = timelineHtml;
+
+            // Attach checkbox events
+            document.querySelectorAll('.step-checkbox').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const stepId = cb.getAttribute('data-step-id');
+                    toggleStep(stepId, cb.checked);
+                    const parentItem = cb.closest('.timeline-item');
+                    if(parentItem){
+                        if(cb.checked) parentItem.classList.add('completed-step');
+                        else parentItem.classList.remove('completed-step');
+                    }
+                    updateCounter();
+                });
+            });
+
+            function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+            document.getElementById('backBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
+            loadProgress();
+        })();
+    </script>
+</body>
+</html>
